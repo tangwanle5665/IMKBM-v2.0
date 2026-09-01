@@ -16,7 +16,7 @@
 | Python | miniconda 自带（当前 3.14） | 一键下载安装.bat 自动装 |
 | 依赖包 | torch / faiss / fastembed / sentence-transformers / flask 等 20+ 个 | 自动安装（阿里云镜像） |
 | AI 模型 | BGE fastembed v1.5（已打包在 models/） | 离线可用，不联网也能检索 |
-| 网络 | ✅ 必须联网（DeepSeek API 生成回答） | 问答要调云端大模型 |
+| 网络 | ✅ 必须联网（DeepSeek API 生成回答 更改代码可以改成其他模型） | 问答要调云端大模型 |
 | API Key | DeepSeek（已在 config.py 内置） | 无需手动配置 |
 | 公网（可选） | cpolar（隧道工具） | 只在用"公网版"时需要 |
 
