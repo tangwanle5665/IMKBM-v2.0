@@ -838,13 +838,13 @@ _SUBJECT_RULES = [
 
 def classify_subjects(question: str) -> list:
     """多标签分类：返回所有命中的学科（含学科间有争议的问题会同时命中多个）
-    无命中时默认 ["内科"]；命中多个时按规则顺序返回，如 ["内科", "外科"]"""
+    无命中时标记为 ["综合"]（不再默认归入内科）"""
     q = question or ""
     hits = []
     for name, kws in _SUBJECT_RULES:
         if any(k in q for k in kws) and name not in hits:
             hits.append(name)
-    return hits or ["内科"]
+    return hits or ["综合"]
 
 
 def classify_subject(question: str) -> str:
@@ -906,9 +906,8 @@ def _subject_tag(it):
 
 def _render_review_docx(items):
     """从贴标签格式的 questions 列表生成 docx：
-    题目区 = 基础/中等/挑战 三大难度区 × 六板块（按 subjects 标签归入所有命中板块，
-    多学科题会出现在多个板块并带标签标记）；题号全局唯一，答案区按题号对照。
-    字体：楷体（正文 7.5pt，标题保持层级但同为楷体）"""
+    题目区只按 基础/中等/挑战 三大难度区组织（不再分学科板块），
+    题号全局唯一，答案区按题号对照。字体：楷体（正文 7.5pt）"""
     try:
         from docx import Document
         from docx.shared import Pt
@@ -934,7 +933,6 @@ def _render_review_docx(items):
     # ===== 收集所有填空小题（扁平 + 标签） =====
     small = []
     for it in items or []:
-        subjects = it.get("subjects") or classify_subjects(it.get("question", ""))
         fills = it.get("fills") or {}
         answers = it.get("answers") or {}
         for section, key in [("基础", "基础填空"), ("中等", "进阶填空"), ("挑战", "挑战填空")]:
@@ -942,7 +940,6 @@ def _render_review_docx(items):
             if q_text:
                 small.append({
                     "section": section,
-                    "subjects": list(subjects),
                     "question": q_text,
                     "answer": answers.get(key, ""),
                 })
@@ -953,21 +950,15 @@ def _render_review_docx(items):
     for i, it in enumerate(small, 1):
         it["num"] = i
 
-    # ===== 题目区：三大难度区 × 六板块（按标签归入所有命中板块） =====
+    # ===== 题目区：三大难度区（不再分学科板块） =====
     section_titles = {"基础": "一、基础填空（掌握基本概念）",
                       "中等": "二、中等填空（理解机制）",
                       "挑战": "三、挑战填空（临床/机制推理）"}
     for section in ["基础", "中等", "挑战"]:
         sec_items = [it for it in small if it["section"] == section]
         _p(doc, section_titles[section], size=12, bold=True)
-        for subj in REVIEW_SECTIONS:
-            sub_items = [it for it in sec_items if subj in it["subjects"]]
-            if not sub_items:
-                continue
-            _p(doc, f"{section} · {subj}", size=10, bold=True)
-            for it in sub_items:
-                tag = _subject_tag(it)
-                _p(doc, f"【{it['num']}】{tag}{it['question']}", size=7.5)
+        for it in sec_items:
+            _p(doc, f"【{it['num']}】{it['question']}", size=7.5)
 
     # ===== 答案区（文件最后，按题号查找） =====
     doc.add_page_break()
