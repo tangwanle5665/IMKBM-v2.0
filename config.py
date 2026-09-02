@@ -68,7 +68,7 @@ BGE_DEVICE = "cpu"
 BGE_BATCH_SIZE = 32
 
 # ==================== DeepSeek API 配置 ====================
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-3ed13018815f4e3d9dec1afbfbd111e8")#输入你的API密钥
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "你的API密钥")#输入你的API密钥
 DEEPSEEK_API_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
 DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
