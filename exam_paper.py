@@ -43,8 +43,8 @@ def load_all_questions(db_dir=DB_DIR):
                 for it in data["questions"]:
                     if isinstance(it, dict) and it.get("fills"):
                         it = dict(it)
-                        subs = it.get("subjects") or ["内科"]
-                        it["_subject"] = subs[0] if subs else "内科"
+                        subs = it.get("subjects") or ["综合"]
+                        it["_subject"] = subs[0] if subs else "综合"
                         items.append(it)
             elif isinstance(data, dict):
                 # 旧格式：{"内科": [...]} 分组
@@ -61,8 +61,8 @@ def load_all_questions(db_dir=DB_DIR):
                 for it in data:
                     if isinstance(it, dict) and it.get("fills"):
                         it = dict(it)
-                        subs = it.get("subjects") or ["内科"]
-                        it["_subject"] = subs[0] if subs else "内科"
+                        subs = it.get("subjects") or ["综合"]
+                        it["_subject"] = subs[0] if subs else "综合"
                         items.append(it)
         except Exception as e:
             print(f"⚠️ 数据库加载失败 {fname}: {e}")
