@@ -45,11 +45,17 @@
 numpy，scipy，scikit-learn，pandas为科学计算与数据处理所需要的插件
 
 onnxruntime，fastembed，sentence-transformers，torch，transformers / tokenizers，huggingface-hub都是AI嵌入模型，是语义检索的核心
+
 faiss-cpu负责对向量进行检索
+
 PyMuPDF (fitz)，python-docx，python-pptx，comtypes负责进行文档的解析（包括题库，药物说明书，教材等）
+
 langchain-text-splitters，langchain-core则负责进行文本分块
+
 matplotlib，networkx，Pillow负责绘制可视化图像
+
 针对网页版，我选取了flask，requests，python-dotenv这三个插件进行运作
+
 向量编码的过程是一个十分折磨人的过程，为了然用户更直观的感受还剩多久，我选取了tqdm和joblib来绘制进度条
 
 ---
