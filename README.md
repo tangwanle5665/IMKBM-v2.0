@@ -121,15 +121,15 @@ matplotlib，networkx，Pillow负责绘制可视化图像
 │   └── config.py          ← 全局配置
 │
 ├── rag_modules/           ← 流水线模块（pipeline/router/memory/security）
-├── vector_db/ 558MB       ← 向量库（fastembed v1.5）
+├── vector_db              ← 向量库（fastembed v1.5）
 ├── models/ 365MB          ← AI模型（bge + fastembed ONNX）
-├── parsed_texts/ 66MB     ← 教材解析文本
+├── parsed_texts           ← 教材解析文本
 ├── pdf                    ← 教材源文件
 ├── ppt                    ← 教学PPT
 ├── drug_labels            ← 药物说明书
 ├── 题库pdf/               ← 考研真题
 ├── 题库doc/               ← Word题库
-├── 考试题库/              ← 试卷+数据库
+├── 考试题库/               ← 试卷+数据库
 ├── question_bank/         ← 题库向量缓存
 ├── images/                ← 代谢路径图
 ├── 汤臣一品/               ← 全部脚本（7 bat + 重建工具）
