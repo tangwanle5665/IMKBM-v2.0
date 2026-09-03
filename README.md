@@ -8,9 +8,46 @@
 
 ------
 
-## 项目原理
-1.我
+## 项目中使用的插件以及对应插件的功能介绍：
+1. numpy：在该知识库中，主要用来进行所有向量和矩阵的计算
+2. scipy：主要负责稀疏这个项目中的矩阵，从而起到节省内存的作用
+3. scikit-learn：主要负责在文本向量化，检索过程中所需要的向量余弦角度计算以及归一化
+4. pandas：主要负责读取题库为表格数据
+5. fastembed：这个项目中的主力，主要负责加载官方 ONNX 版 BGE 模型，当前实际使用的低内存嵌入引擎，可以降低对于电脑配置的要求
+6. onnxruntime：fastembed的推理引擎，不依赖pytorch的推理引擎，可以减少内存要求
+7. sentence-transformers：备用的嵌入方案（PyTorch 版），fastembed 不可用时回退，增加系统运行的稳定性
+8. torch：日常运行不加载，只在pytorch版本运行的时候他才运行
+9. transformers / tokenizers：sentence-transformers 底层依赖
+10. huggingface-hub：可以从从HF镜像网站里下载模型文件
+11. faiss-cpu：可以进行向量相似度索引，也是该系统运行过程中的核心
+12. PyMuPDF (fitz)：负责解析 PDF（教材、考研真题、药品说明书）提取文字
+13. python-docx：负责读取docx教材/题库+生成复习册/试卷 docx
+14. python-pptx负责解析教学PPT（.ppt/.pptx）提取文字
+15. comtypes负责调用 Word COM 把老式 .doc 转成 .docx（更新题库用）
+16. langchain-text-splitters：负责将教材长文本按500字智能分块（构建向量库的 65,929 个块）
+17. langchain-core：text-splitters 的底层依赖（Document 数据结构）
+18. matplotlib：负责绘制代谢路径图（三羧酸循环、糖酵解、尿素循环等 PNG）
+19. networkx：负责代谢通路图结构布局辅助
+20. Pillow：负责GUI/问答中图片的缩放、预览、显示
+21. flask：负责手机版/公网版Web服务
+22. requests：负责调用DeepSeek API
+23. python-dotenv：读取env中的环境变量（config.py加载配置）
+24. tqdm：负责显示向量编码过程中的进度条，不然这会是一个很枯燥的过程，你永远都不知道你还要等多久
+25. joblib：计算还剩多久嗯对
 
+numpy，scipy，scikit-learn，pandas为科学计算与数据处理所需要的插件
+onnxruntime，fastembed，sentence-transformers，torch，transformers / tokenizers，huggingface-hub都是AI嵌入模型，是语义检索的核心
+faiss-cpu负责对向量进行检索
+PyMuPDF (fitz)，python-docx，python-pptx，comtypes负责进行文档的解析（包括题库，药物说明书，教材等）
+langchain-text-splitters，langchain-core则负责进行文本分块
+matplotlib，networkx，Pillow负责绘制可视化图像
+针对网页版，我选取了flask，requests，python-dotenv这三个插件进行运作
+向量编码的过程是一个十分折磨人的过程，为了然用户更直观的感受还剩多久，我选取了tqdm和joblib来绘制进度条
+
+
+---
+## 相较于上一个版本的改变
+1. 该医学知识库基于模块RAG，方便后续对于其功能进行完善，受制于电脑性能的限制，无法使用图表RAG
 
 ---
 ## 对于电脑配置的要求
@@ -50,6 +87,7 @@
 4. 电脑可能会存在定期休眠的情况，用户可以根据自己的需求来决定是否需要选择24h启动.bat
 5. 用户在使用过程中如果改变嵌入模型，例如我将之前的PyTorch bge-small-zh（384 维）转变为fastembed bge-small-zh-v1.5（512 维）则需要重新运行重建向量库.bat
 6. 内部插件版本可能存在不定期更新的情况，若是无法运行，则可以优先试试看一件维护.bat，若是还是无法运行，我的手机号为19703675390，我们可以在微信上交流
+7. 输出的填空题就在这个目录下面，用户若是想要出一份检测自己知识掌握程度的试卷，则需要定期将数据库文件“复习填空题_data.json”复制到这个目录：D/python work/医学知识库/考试题库/数据库 这个目录下面，出出来的试卷则放在D/python work/医学知识库/考试题库/试卷 这个目录下面
 
 ---
 ## 项目结构
