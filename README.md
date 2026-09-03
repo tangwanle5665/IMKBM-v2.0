@@ -43,6 +43,7 @@
 25. joblib：计算还剩多久，嗯对
 
 numpy，scipy，scikit-learn，pandas为科学计算与数据处理所需要的插件
+
 onnxruntime，fastembed，sentence-transformers，torch，transformers / tokenizers，huggingface-hub都是AI嵌入模型，是语义检索的核心
 faiss-cpu负责对向量进行检索
 PyMuPDF (fitz)，python-docx，python-pptx，comtypes负责进行文档的解析（包括题库，药物说明书，教材等）
