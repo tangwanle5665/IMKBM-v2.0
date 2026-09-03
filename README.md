@@ -6,6 +6,13 @@
 
 经过实验，对于向量库进行编码后，对于不同书本内类似知识点的潜在逻辑可以得到快速且有效的串联，有助于使用者对于跨书本的医学知识进行深刻的理解
 
+---
+## 相较于上一个版本的改变
+1. 该版本增加了输出填空题以及出试卷的功能，旨在帮助读者更好的掌握相关知识点
+2. 改变了界面的绘制
+3. 降低了运行过程中需要的内存，减少了对于电脑硬件配置的要求
+4. 输出了大量bat文件，用户再也不用去一个个运行代码了
+
 ------
 
 ## 项目中使用的插件以及对应插件的功能介绍：
@@ -33,7 +40,7 @@
 22. requests：负责调用DeepSeek API
 23. python-dotenv：读取env中的环境变量（config.py加载配置）
 24. tqdm：负责显示向量编码过程中的进度条，不然这会是一个很枯燥的过程，你永远都不知道你还要等多久
-25. joblib：计算还剩多久嗯对
+25. joblib：计算还剩多久，嗯对
 
 numpy，scipy，scikit-learn，pandas为科学计算与数据处理所需要的插件
 onnxruntime，fastembed，sentence-transformers，torch，transformers / tokenizers，huggingface-hub都是AI嵌入模型，是语义检索的核心
@@ -43,11 +50,6 @@ langchain-text-splitters，langchain-core则负责进行文本分块
 matplotlib，networkx，Pillow负责绘制可视化图像
 针对网页版，我选取了flask，requests，python-dotenv这三个插件进行运作
 向量编码的过程是一个十分折磨人的过程，为了然用户更直观的感受还剩多久，我选取了tqdm和joblib来绘制进度条
-
-
----
-## 相较于上一个版本的改变
-1. 该医学知识库基于模块RAG，方便后续对于其功能进行完善，受制于电脑性能的限制，无法使用图表RAG
 
 ---
 ## 对于电脑配置的要求
