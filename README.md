@@ -12,6 +12,7 @@
 2. 改变了界面的绘制
 3. 降低了运行过程中需要的内存，减少了对于电脑硬件配置的要求
 4. 输出了大量bat文件，用户再也不用去一个个运行代码了
+5. v2版本为了提升稳定和速度被收敛删掉了之前更彻底的模块化版本（agent / reranker / retrievers / rewriter / tools / validator 六个独立模块，ReAct 多步推理架构）
 
 ------
 
@@ -85,8 +86,9 @@ matplotlib，networkx，Pillow负责绘制可视化图像
 2. 将17个py文件源代码放入到这个文件夹当中
 3. 创立pdf，ppt，drug_labels，汤臣一品等文件夹
 4. 将目录里所有的bat文件放入到汤臣一品当中
-5. 点击一键安装.bat，就可以布置好知识库运行所需要的全部环境
-6. 输入win+R，进入cmd界面，输入cpolar authtoken 你的Token（Token 在 cpolar 官网 → 验证 → Authtoken 页面查看，首次使用需要申请）
+5. 将pipeline/router/memory/security.py文件放到rag_modules这个文件夹中（因为该系统使用的是模块化RAG，放到这个文件夹中方便后续修改）
+6. 点击一键安装.bat，就可以布置好知识库运行所需要的全部环境
+7. 输入win+R，进入cmd界面，输入cpolar authtoken 你的Token（Token 在 cpolar 官网 → 验证 → Authtoken 页面查看，首次使用需要申请）
 
 ---
 ## 运行过程
