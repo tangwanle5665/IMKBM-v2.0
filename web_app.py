@@ -149,7 +149,12 @@ HTML_PAGE = """<!DOCTYPE html>
   <textarea id="input" rows="1" placeholder="输入医学问题，回车发送…"></textarea>
   <button id="send" title="发送">➤</button>
 </footer>
-<div class="hint">支持连续追问 · 自动关联上下文</div>
+<div class="hint" style="display:flex;justify-content:center;align-items:center;gap:12px;">
+  <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="checkbox" id="optAnswer" checked> 出回答正文</label>
+  <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="checkbox" id="optFills" checked> 出填空题</label>
+  <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="checkbox" id="optReview" checked> 出知识点串联</label>
+  <span id="optTip" style="color:#D97706;"></span>
+</div>
 
 <script>
 (function(){
@@ -163,6 +168,33 @@ HTML_PAGE = """<!DOCTYPE html>
   var list = document.getElementById('list');
   var input = document.getElementById('input');
   var send = document.getElementById('send');
+  var optAnswer = document.getElementById('optAnswer');
+  var optFills = document.getElementById('optFills');
+  var optReview = document.getElementById('optReview');
+  var optTip = document.getElementById('optTip');
+
+  // 开关状态持久化 + 联动提示
+  try {
+    optAnswer.checked = localStorage.getItem('med_optAnswer') !== '0';
+    optFills.checked = localStorage.getItem('med_optFills') !== '0';
+    optReview.checked = localStorage.getItem('med_optReview') !== '0';
+  } catch(e) {}
+  function syncOpt(){
+    try {
+      localStorage.setItem('med_optAnswer', optAnswer.checked ? '1' : '0');
+      localStorage.setItem('med_optFills', optFills.checked ? '1' : '0');
+      localStorage.setItem('med_optReview', optReview.checked ? '1' : '0');
+    } catch(e) {}
+    if(!optAnswer.checked && !optFills.checked){ optTip.textContent = '⚠ 回答和填空都关了'; }
+    else if(!optAnswer.checked && optFills.checked){ optTip.textContent = '只出填空' + (optReview.checked ? '' : '·每档3道'); }
+    else if(!optFills.checked){ optTip.textContent = '当前不出填空'; }
+    else if(!optReview.checked){ optTip.textContent = '知识点关 → 每档3道'; }
+    else { optTip.textContent = ''; }
+  }
+  optAnswer.addEventListener('change', syncOpt);
+  optFills.addEventListener('change', syncOpt);
+  optReview.addEventListener('change', syncOpt);
+  syncOpt();
 
   function addMsg(role, text){
     var wrap = document.createElement('div');
@@ -228,7 +260,10 @@ HTML_PAGE = """<!DOCTYPE html>
     };
     xhr.onerror = function(){ finish(typing, '❌ 网络错误：无法连接到服务器，请确认电脑端服务在运行'); };
     xhr.ontimeout = function(){ finish(typing, '⏳ 回答超时（90秒），请重试或换一个更具体的问题'); };
-    xhr.send(JSON.stringify({question: q, session_id: sid}));
+    xhr.send(JSON.stringify({question: q, session_id: sid,
+                             enable_answer: optAnswer.checked,
+                             enable_fills: optFills.checked,
+                             enable_review: optReview.checked}));
   }
 
   function autoGrow(){
@@ -310,11 +345,17 @@ def handle_ask():
         push_session(sid, question, semantic_answer)
         return jsonify({'status':'success', 'answer': semantic_answer})
 
-    # 3. 缓存未命中，调用完整 RAG 流程（带会话历史 -> 支持上下文关联）
-    #    完整模式：回答 + 三档填空题（自动汇入复习 docx），与桌面版一致
+    # 3. 缓存未命中，调用完整 RAG 流程（带会话历史 + 输出开关）
+    #    开关：填空题 / 知识点串联（关闭知识点时填空增至每档 3 道）
     try:
+        enable_answer = bool(data.get('enable_answer', True))
+        enable_fills = bool(data.get('enable_fills', True))
+        enable_review = bool(data.get('enable_review', True))
         full_answer = ""
-        for chunk in med_exam_chat_stream(question, session_history):
+        for chunk in med_exam_chat_stream(question, session_history,
+                                          enable_answer=enable_answer,
+                                          enable_fills=enable_fills,
+                                          enable_review=enable_review):
             full_answer += chunk
         clean_answer = re.sub(r'\[IMAGE:.*?\]', '', full_answer)
         # med_exam_chat_stream 内部已经保存了缓存，不需要再手动保存

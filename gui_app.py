@@ -148,6 +148,25 @@ class SessionTab(ttk.Frame):
         self.entry.pack(fill="x", padx=10, ipady=7)
         self.entry.bind("<Return>", self.ask)
 
+        # 输出开关：回答正文 / 填空题 / 知识点串联（关串联时填空增至每档3道）
+        opt_row = tk.Frame(input_card, bg=CARD_COLOR)
+        opt_row.pack(fill="x", padx=10, pady=(6, 0))
+        self.var_answer = tk.BooleanVar(value=True)
+        self.var_fills = tk.BooleanVar(value=True)
+        self.var_review = tk.BooleanVar(value=True)
+        cb_style = {"bg": CARD_COLOR, "fg": SUB_TEXT, "selectcolor": "#FFFFFF",
+                    "activebackground": CARD_COLOR, "font": ("微软雅黑", 8),
+                    "highlightthickness": 0, "bd": 0, "cursor": "hand2"}
+        tk.Checkbutton(opt_row, text="出回答正文", variable=self.var_answer,
+                       command=self._on_option_change, **cb_style).pack(side="left")
+        tk.Checkbutton(opt_row, text="出填空题", variable=self.var_fills,
+                       command=self._on_option_change, **cb_style).pack(side="left", padx=(12, 0))
+        tk.Checkbutton(opt_row, text="出知识点串联", variable=self.var_review,
+                       command=self._on_option_change, **cb_style).pack(side="left", padx=(12, 0))
+        self.opt_hint = tk.Label(opt_row, text="", bg=CARD_COLOR, fg=WARN_COLOR,
+                                 font=("微软雅黑", 8))
+        self.opt_hint.pack(side="left", padx=(12, 0))
+
         btn_row = tk.Frame(input_card, bg=CARD_COLOR)
         btn_row.pack(fill="x", padx=10, pady=(8, 9))
         self.ask_btn = make_btn(
@@ -268,6 +287,20 @@ class SessionTab(ttk.Frame):
             self.image_window.close()
             self.image_window = None
 
+    def _on_option_change(self):
+        """开关联动提示：关回答=只出填空/串联；关串联时填空增至每档 3 道"""
+        a, f, r = (self.var_answer.get(), self.var_fills.get(), self.var_review.get())
+        if not a and not f:
+            self.opt_hint.config(text="⚠ 回答和填空都关了，将没有输出")
+        elif not a and f:
+            self.opt_hint.config(text="只出填空模式" + ("（每档3道）" if not r else ""))
+        elif not f:
+            self.opt_hint.config(text="当前不出填空题")
+        elif not r:
+            self.opt_hint.config(text="知识点关闭 → 每档出 3 道填空")
+        else:
+            self.opt_hint.config(text="")
+
     def ask(self, event=None):
         q = self.entry.get().strip()
         if not q:
@@ -285,7 +318,12 @@ class SessionTab(ttk.Frame):
 
     def _do_ask_stream(self, question):
         try:
-            generator = med_exam_chat_stream(question, self.history)
+            generator = med_exam_chat_stream(
+                question, self.history,
+                enable_answer=self.var_answer.get(),
+                enable_fills=self.var_fills.get(),
+                enable_review=self.var_review.get(),
+            )
             self.result_queue.put({"type": "stream_start", "question": question})
             full_answer = ""
             for chunk in generator:

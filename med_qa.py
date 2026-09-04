@@ -700,9 +700,11 @@ def build_review_context(question):
 
 _load_know_history()
 
-# ==================== 复习填空题收集（考研六大板块分类 · docx 输出） ====================
+# ==================== 复习填空题收集（贴标签扁平格式 · docx 输出） ====================
 REVIEW_DATA_FILE = os.path.join(BASE_DIR, "复习填空题_data.json")
 REVIEW_DOCX_FILE = os.path.join(BASE_DIR, "复习填空题.docx")
+# 试卷数据源：与复习数据自动同步（exam_paper 生成试卷时读取）
+EXAM_DB_FILE = os.path.join(BASE_DIR, "考试题库", "数据库", "questions.json")
 REVIEW_SECTIONS = ["生理", "生化", "病理", "内科", "外科", "医学人文素养"]
 
 # 学科分类关键词（考研模式）
@@ -853,7 +855,8 @@ def classify_subject(question: str) -> str:
 
 
 def _parse_fills(answer):
-    """解析三档填空题 -> (fills_dict, answers_dict)"""
+    """解析三档填空题 -> (fills_dict, answers_dict)
+    每档支持 1~N 道：同一档多次出现时收集为列表（如每档3道）"""
     fills, answers = {}, {}
     if not answer:
         return fills, answers
@@ -864,9 +867,21 @@ def _parse_fills(answer):
         m = re.search(r"参考答案[:：]\s*(.*)", body, re.S)
         q_text = body[: m.start()].strip() if m else body.strip()
         a_text = m.group(1).strip() if m else ""
-        fills[lvl] = q_text
-        answers[lvl] = a_text
+        fills.setdefault(lvl, []).append(q_text)
+        answers.setdefault(lvl, []).append(a_text)
+    # 兼容旧数据：单道也统一为列表
     return fills, answers
+
+
+def _as_list(v):
+    """兼容取值：字符串或列表都归一为列表"""
+    if v is None:
+        return []
+    if isinstance(v, list):
+        return v
+    if isinstance(v, str) and v.strip():
+        return [v]
+    return []
 
 
 def _load_review_data():
@@ -891,9 +906,17 @@ def _load_review_data():
 
 
 def _save_review_data(items):
-    """以贴标签格式保存：扁平 questions 列表（version=2）"""
+    """以贴标签格式保存：扁平 questions 列表（version=2）
+    同时自动同步到考试题库数据库（试卷数据源），无需手动复制"""
+    payload = {"version": 2, "questions": items}
     with open(REVIEW_DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump({"version": 2, "questions": items}, f, ensure_ascii=False, indent=1)
+        json.dump(payload, f, ensure_ascii=False, indent=1)
+    try:
+        os.makedirs(os.path.dirname(EXAM_DB_FILE), exist_ok=True)
+        with open(EXAM_DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=1)
+    except Exception as e:
+        logger.debug(f"同步考试题库数据库失败: {e}")
 
 
 def _subject_tag(it):
@@ -930,18 +953,17 @@ def _render_review_docx(items):
     _p(doc, "考研填空题复习册（基础 · 中等 · 挑战）", size=14, bold=True)
     _p(doc, "使用方法：先看题目自测，答案统一在文件最后，按题号对照查找。", size=7.5)
 
-    # ===== 收集所有填空小题（扁平 + 标签） =====
+    # ===== 收集所有填空小题（每档 1~N 道，扁平化） =====
     small = []
     for it in items or []:
         fills = it.get("fills") or {}
         answers = it.get("answers") or {}
         for section, key in [("基础", "基础填空"), ("中等", "进阶填空"), ("挑战", "挑战填空")]:
-            q_text = fills.get(key)
-            if q_text:
+            for qi, q_text in enumerate(_as_list(fills.get(key))):
                 small.append({
                     "section": section,
                     "question": q_text,
-                    "answer": answers.get(key, ""),
+                    "answer": _as_list(answers.get(key))[qi] if qi < len(_as_list(answers.get(key))) else "",
                 })
 
     # 排序：基础 → 中等 → 挑战；然后全局编号（题号唯一，答案区对应）
@@ -1095,7 +1117,11 @@ def get_security_stats() -> dict:
 
 
 # ==================== 流式问答（混合 ReAct 主入口） ====================
-def med_exam_chat_stream(question, session_history, brief=False):
+def med_exam_chat_stream(question, session_history, brief=False,
+                         enable_answer=True, enable_fills=True, enable_review=True):
+    """enable_answer: 是否输出回答正文（关=只出填空/串联）
+    enable_fills: 是否生成填空题；enable_review: 是否生成知识点串联复习
+    （关闭知识点时填空题增至每档 3 道）"""
     logger.info(f"提问: {question}")
 
     try:
@@ -1117,12 +1143,14 @@ def med_exam_chat_stream(question, session_history, brief=False):
                 yield semantic_ans
             return
 
-        # 3. 混合 ReAct Pipeline（带复习串联上下文 + 多学科标签）
+        # 3. 混合 ReAct Pipeline（带复习串联上下文 + 多学科标签 + 输出开关）
         review_ctx = build_review_context(question)
         pipeline = get_rag_pipeline()
         subject_tags = classify_subjects(question)
         result = pipeline.run(question, session_history, review_context=review_ctx,
-                              brief=brief, subject_tags=subject_tags)
+                              brief=brief, subject_tags=subject_tags,
+                              enable_answer=enable_answer,
+                              enable_fills=enable_fills, enable_review=enable_review)
 
         # 记录本次知识点到历史（复习用）
         try:
@@ -1197,11 +1225,12 @@ def med_exam_chat_stream(question, session_history, brief=False):
         except Exception as e:
             logger.debug(f"记忆更新失败: {e}")
 
-        # 📝 把填空题保存到复习文件
-        try:
-            _save_review_fill(question, answer)
-        except Exception as e:
-            logger.debug(f"保存填空题失败: {e}")
+        # 📝 把填空题保存到复习文件（仅当开启了填空题时）
+        if enable_fills:
+            try:
+                _save_review_fill(question, answer)
+            except Exception as e:
+                logger.debug(f"保存填空题失败: {e}")
 
         yield answer
 
@@ -1210,9 +1239,12 @@ def med_exam_chat_stream(question, session_history, brief=False):
         yield f"⚠️ 系统错误: {e}"
 
 # ==================== 非流式版本 ====================
-def med_exam_chat(question, session_history):
+def med_exam_chat(question, session_history, brief=False,
+                  enable_answer=True, enable_fills=True, enable_review=True):
     full_answer = ""
-    for chunk in med_exam_chat_stream(question, session_history):
+    for chunk in med_exam_chat_stream(question, session_history, brief=brief,
+                                      enable_answer=enable_answer,
+                                      enable_fills=enable_fills, enable_review=enable_review):
         full_answer += chunk
     return full_answer
 

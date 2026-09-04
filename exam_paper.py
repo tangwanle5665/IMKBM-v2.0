@@ -66,7 +66,15 @@ def load_all_questions(db_dir=DB_DIR):
                         items.append(it)
         except Exception as e:
             print(f"⚠️ 数据库加载失败 {fname}: {e}")
-    return items
+    # 跨文件去重（自动同步文件与手动快照可能重叠）
+    seen, unique = set(), []
+    for it in items:
+        q = it.get("question", "")
+        if q in seen:
+            continue
+        seen.add(q)
+        unique.append(it)
+    return unique
 
 
 def _pool_questions(items, key):
@@ -75,11 +83,14 @@ def _pool_questions(items, key):
     for it in items:
         fills = it.get("fills") or {}
         answers = it.get("answers") or {}
-        q = fills.get(key)
-        if q:
+        qs = fills.get(key)
+        ans = answers.get(key)
+        q_list = qs if isinstance(qs, list) else ([qs] if qs else [])
+        a_list = ans if isinstance(ans, list) else ([ans] if ans else [])
+        for qi, q in enumerate(q_list):
             pool.append({
                 "question": q,
-                "answer": answers.get(key, ""),
+                "answer": a_list[qi] if qi < len(a_list) else "",
                 "subject": it.get("_subject", ""),
                 "source": it.get("question", ""),
             })
