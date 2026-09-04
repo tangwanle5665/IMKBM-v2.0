@@ -13,7 +13,7 @@ import traceback
 from PIL import Image, ImageTk
 from pdf_parser import parse_files_to_txt
 from ppt_parser import parse_all_ppt
-from med_qa import med_exam_chat_stream, clear_cache, record_feedback
+from med_qa import med_exam_chat_stream, clear_cache, record_feedback, daily_snapshot
 from config import BASE_DIR
 from utils import logger, get_bge_model, clear_vector_db_cache
 from update_question_bank import update_all
@@ -687,6 +687,14 @@ class MedApp:
         threading.Thread(target=_do_update, daemon=True).start()
 
     def on_closing(self):
+        # 关闭前自动做每日归档（当天数据存为 数据库_YYYY-MM-DD.json）
+        try:
+            path = daily_snapshot()
+            if path:
+                self.status.config(text=f"🗂️ 已归档: {os.path.basename(path)}", fg="#0E7490")
+                self.root.update_idletasks()
+        except Exception:
+            pass
         self.root.destroy()
 
 

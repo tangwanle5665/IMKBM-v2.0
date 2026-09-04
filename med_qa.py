@@ -705,6 +705,7 @@ REVIEW_DATA_FILE = os.path.join(BASE_DIR, "复习填空题_data.json")
 REVIEW_DOCX_FILE = os.path.join(BASE_DIR, "复习填空题.docx")
 # 试卷数据源：与复习数据自动同步（exam_paper 生成试卷时读取）
 EXAM_DB_FILE = os.path.join(BASE_DIR, "考试题库", "数据库", "questions.json")
+EXAM_DB_DIR = os.path.join(BASE_DIR, "考试题库", "数据库")
 REVIEW_SECTIONS = ["生理", "生化", "病理", "内科", "外科", "医学人文素养"]
 
 # 学科分类关键词（考研模式）
@@ -917,6 +918,27 @@ def _save_review_data(items):
             json.dump(payload, f, ensure_ascii=False, indent=1)
     except Exception as e:
         logger.debug(f"同步考试题库数据库失败: {e}")
+
+
+def daily_snapshot():
+    """每日归档：把当前复习数据全量保存为带日期的文件
+    输出：考试题库/数据库/数据库_YYYY-MM-DD.json（当天多次运行会覆盖为最新）
+    返回文件路径；无数据时返回 None"""
+    try:
+        items = _load_review_data()
+        if not items:
+            return None
+        date_str = time.strftime("%Y-%m-%d")
+        path = os.path.join(EXAM_DB_DIR, f"数据库_{date_str}.json")
+        payload = {"version": 2, "questions": items, "snapshot_date": date_str}
+        os.makedirs(EXAM_DB_DIR, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=1)
+        logger.info(f"🗂️ 每日归档完成: {path}（{len(items)} 条）")
+        return path
+    except Exception as e:
+        logger.debug(f"每日归档失败: {e}")
+        return None
 
 
 def _subject_tag(it):
