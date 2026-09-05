@@ -117,11 +117,12 @@ class ImageViewerWindow:
 
 
 class SessionTab(ttk.Frame):
-    def __init__(self, parent, notebook, session_id, title):
+    def __init__(self, parent, notebook, session_id, title, app=None):
         super().__init__(parent)
         self.notebook = notebook
         self.session_id = session_id
         self.title = title
+        self.app = app            # MedApp 引用（用于刷新侧栏）
         self.history = []
         self.load_history()
         self.current_image_path = None
@@ -181,8 +182,6 @@ class SessionTab(ttk.Frame):
         self.view_image_btn.pack(side="left", padx=(8, 0))
         make_btn(btn_row, "清空历史", self.clear_history, RED_COLOR,
                  padx=10, pady=5, hover="#B91C1C").pack(side="left", padx=(8, 0))
-        make_btn(btn_row, "清空缓存", self.clear_cache, WARN_COLOR,
-                 padx=10, pady=5, hover="#B45309").pack(side="left", padx=(8, 0))
         make_btn(btn_row, "👍", lambda ft="thumbs_up": self._send_feedback(ft),
                  SUCCESS_COLOR, padx=8, pady=5).pack(side="left", padx=(8, 0))
         make_btn(btn_row, "👎", lambda ft="thumbs_down": self._send_feedback(ft),
@@ -377,6 +376,8 @@ class SessionTab(ttk.Frame):
                     clean_for_history = full_answer.replace(img_tag, "").strip()
                     self.history.append({"question": question, "answer": clean_for_history})
                     self.save_history()
+                    if self.app is not None:
+                        self.app.refresh_sidebar()
                     self.streaming = False
                     self.ask_btn.config(state="normal")
                     self.status_label.config(text="● 就绪", fg=SUCCESS_COLOR)
@@ -442,77 +443,59 @@ class MedApp:
     def __init__(self, root):
         self.root = root
         root.title("医学知识库智能问答系统V1.0")
-        root.geometry("980x680")
-        root.minsize(760, 520)
+        root.geometry("1120x720")
+        root.minsize(900, 580)
         root.configure(bg=BG_COLOR)
 
-        # ===== 标题栏（深蓝 + 副标题 + 底部亮蓝细线） =====
-        title_bar = tk.Frame(root, bg=ACCENT_DARK)
-        title_bar.pack(fill="x")
-        title = tk.Label(
-            title_bar, text="✚  医学知识库 · 智能问答系统",
-            font=("微软雅黑", 15, "bold"),
-            bg=ACCENT_DARK, fg="white"
-        )
-        title.pack(anchor="w", padx=18, pady=(10, 0))
-        subtitle = tk.Label(
-            title_bar, text="基于教材 · 题库 · 教学PPT 的 AI 医学助手   |   V1.0",
-            font=("微软雅黑", 8), bg=ACCENT_DARK, fg="#93C5FD"
-        )
-        subtitle.pack(anchor="w", padx=18, pady=(1, 9))
-        tk.Frame(root, bg="#3B82F6", height=2).pack(fill="x")
+        # ============ 左侧导航配色（深色对话风） ============
+        self.SB_BG = "#111827"        # 侧栏深底
+        self.SB_BG2 = "#1F2937"       # 分组底
+        self.SB_FG = "#E5E7EB"        # 主文字
+        self.SB_SUB = "#94A3B8"       # 小字
+        self.SB_ACT = "#2563EB"       # 选中
+        self.SB_HOV = "#334155"
 
-        # ===== 工具栏（分组：会话 | 知识库） =====
-        toolbar = tk.Frame(root, bg=BG_COLOR)
-        toolbar.pack(fill="x", pady=(8, 4), padx=14)
+        # ============ 主框架：左侧导航 + 右侧聊天 ============
+        main = tk.Frame(root, bg=BG_COLOR)
+        main.pack(fill="both", expand=True)
 
-        tk.Label(toolbar, text="会话", bg=BG_COLOR, fg=SUB_TEXT,
-                 font=("微软雅黑", 8)).pack(side="left", padx=(2, 6))
-        make_btn(toolbar, "＋ 新建会话", self.new_session, ACCENT_COLOR,
-                 hover=ACCENT_DARK, padx=10, pady=4).pack(side="left", padx=2)
-        make_btn(toolbar, "📌 置顶当前", self.pin_current, "#0284C7",
-                 hover="#0369A1", padx=10, pady=4).pack(side="left", padx=2)
+        # ---- 左导航 ----
+        self.sidebar = tk.Frame(main, bg=self.SB_BG, width=240)
+        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
+        self._build_sidebar()
 
-        tk.Frame(toolbar, bg=LINE_COLOR, width=1, height=22).pack(side="left", padx=10)
+        # ---- 右侧容器 ----
+        right = tk.Frame(main, bg=BG_COLOR)
+        right.pack(side="left", fill="both", expand=True)
 
-        tk.Label(toolbar, text="知识库", bg=BG_COLOR, fg=SUB_TEXT,
-                 font=("微软雅黑", 8)).pack(side="left", padx=(0, 6))
-        make_btn(toolbar, "📄 解析文档", lambda: self.run_task(parse_all_docs),
-                 SUCCESS_COLOR, hover="#047857", padx=10, pady=4).pack(side="left", padx=2)
-        make_btn(toolbar, "📚 更新题库", self.update_question_bank,
-                 WARN_COLOR, hover="#B45309", padx=10, pady=4).pack(side="left", padx=2)
-        make_btn(toolbar, "📝 导入真题", self.import_exam_paper,
-                 PURPLE_COLOR, hover="#6D28D9", padx=10, pady=4).pack(side="left", padx=2)
-        make_btn(toolbar, "📋 生成试卷", self.generate_exam_paper,
-                 "#0E7490", hover="#155E75", padx=10, pady=4).pack(side="left", padx=2)
-        make_btn(toolbar, "🔄 一键更新", self.full_update_knowledge_base,
-                 BROWN_COLOR, hover="#78350F", padx=10, pady=4).pack(side="left", padx=2)
-
-        self.notebook = ttk.Notebook(root)
-        self.notebook.pack(fill="both", expand=True, padx=14, pady=(4, 6))
-        # 标签页样式（医学蓝）
+        # 会话容器：Notebook（隐藏标签页，由左侧列表切换）
+        self.notebook = ttk.Notebook(right)
+        self.notebook.pack(fill="both", expand=True, padx=16, pady=(10, 4))
         try:
             style = ttk.Style(root)
-            style.configure("TNotebook.Tab", font=("微软雅黑", 9), padding=(12, 6))
             style.configure("TNotebook", background=BG_COLOR, borderwidth=0)
+            style.configure("TNotebook.Tab", font=("微软雅黑", 9), padding=(6, 2))
         except Exception:
             pass
 
+        # ===== 右区底部状态行（浅色细条） =====
+        status_bar = tk.Frame(right, bg=CARD_COLOR, highlightthickness=1,
+                              highlightbackground=LINE_COLOR)
+        status_bar.pack(fill="x", padx=16, pady=(2, 8))
+        self.status = tk.Label(
+            status_bar,
+            text="●  混合 RAG 检索 · DeepSeek 生成 · 支持上下文/三档填空/每日归档",
+            bg=CARD_COLOR, fg=SUB_TEXT, pady=4, font=("微软雅黑", 8)
+        )
+        self.status.pack(fill="x")
+
         self.session_counter = 0
+        self._active_sid = None
         self.load_all_sessions()
 
         if len(self.notebook.tabs()) == 0:
             self.new_session()
-
-        # ===== 底部状态栏 =====
-        status_bar = tk.Frame(root, bg=ACCENT_DARK)
-        status_bar.pack(fill="x", side="bottom")
-        self.status = tk.Label(
-            status_bar,
-            text="●  混合 RAG 检索 · DeepSeek 生成  ·  支持上下文追问 / 三档填空题 / 复习串联",
-            bg=ACCENT_DARK, fg="#E0F2FE", pady=7, font=("微软雅黑", 9)
-        )
-        self.status.pack(fill="x")
 
         root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
@@ -520,14 +503,143 @@ class MedApp:
         threading.Thread(target=self._load_bank_info, daemon=True).start()
         logger.info("🔄 BGE模型正在后台加载...")
 
+    # ==================== 侧栏构建 ====================
+    def _nav_btn(self, parent, text, cmd, sub=False):
+        """侧栏扁平按钮（深底文字，hover 提亮）"""
+        b = tk.Label(parent, text=text, bg=self.SB_BG, fg=self.SB_SUB if sub else self.SB_FG,
+                     font=("微软雅黑", 9), anchor="w", padx=14, pady=5, cursor="hand2")
+        b.pack(fill="x")
+        b.bind("<Button-1>", lambda e: cmd())
+        b.bind("<Enter>", lambda e: b.config(bg=self.SB_HOV))
+        b.bind("<Leave>", lambda e: b.config(bg=self.SB_BG))
+        return b
+
+    def _group_label(self, parent, text):
+        tk.Label(parent, text=text, bg=self.SB_BG, fg=self.SB_SUB,
+                 font=("微软雅黑", 7), anchor="w", padx=14, pady=(10, 2)
+                 ).pack(fill="x")
+
+    def _build_sidebar(self):
+        # 品牌
+        brand = tk.Frame(self.sidebar, bg=self.SB_BG)
+        brand.pack(fill="x", pady=(12, 6))
+        tk.Label(brand, text="✚  医学知识库", bg=self.SB_BG, fg="white",
+                 font=("微软雅黑", 13, "bold")).pack(anchor="w", padx=14)
+        tk.Label(brand, text="考研医学 AI 助手 · 教材/题库/PPT",
+                 bg=self.SB_BG, fg=self.SB_SUB, font=("微软雅黑", 7)
+                 ).pack(anchor="w", padx=14, pady=(1, 0))
+
+        # 新建会话
+        new_btn = tk.Label(self.sidebar, text="＋  新建会话", bg=self.SB_ACT, fg="white",
+                           font=("微软雅黑", 9, "bold"), anchor="center", pady=7,
+                           cursor="hand2")
+        new_btn.pack(fill="x", padx=10, pady=(8, 4))
+        new_btn.bind("<Button-1>", lambda e: self.new_session())
+        new_btn.bind("<Enter>", lambda e: new_btn.config(bg="#1D4ED8"))
+        new_btn.bind("<Leave>", lambda e: new_btn.config(bg=self.SB_ACT))
+
+        # 会话列表（滚动）
+        self._group_label(self.sidebar, "会  话")
+        list_holder = tk.Frame(self.sidebar, bg=self.SB_BG)
+        list_holder.pack(fill="both", expand=True, padx=(0, 0))
+        self.sess_canvas = tk.Canvas(list_holder, bg=self.SB_BG,
+                                     highlightthickness=0, bd=0)
+        self.sess_inner = tk.Frame(self.sess_canvas, bg=self.SB_BG)
+        self._sess_win = self.sess_canvas.create_window((0, 0), window=self.sess_inner,
+                                                        anchor="nw")
+        self.sess_canvas.pack(side="left", fill="both", expand=True)
+        self.sess_inner.bind("<Configure>",
+                             lambda e: self.sess_canvas.configure(
+                                 scrollregion=self.sess_canvas.bbox("all")))
+        self.sess_canvas.bind("<MouseWheel>",
+                              lambda e: self.sess_canvas.yview_scroll(
+                                  int(-e.delta / 120), "units"))
+
+        # 知识库工具（固定底部）
+        tools = tk.Frame(self.sidebar, bg=self.SB_BG)
+        tools.pack(side="bottom", fill="x")
+        self._group_label(tools, "知识库工具")
+        self._nav_btn(tools, "📄  解析文档", lambda: self.run_task(parse_all_docs))
+        self._nav_btn(tools, "📚  更新题库", self.update_question_bank)
+        self._nav_btn(tools, "📝  导入真题", self.import_exam_paper)
+        self._nav_btn(tools, "📋  生成试卷", self.generate_exam_paper)
+        self._nav_btn(tools, "🔄  一键更新", self.full_update_knowledge_base)
+        tk.Frame(tools, bg=self.SB_BG2, height=1).pack(fill="x", pady=4)
+        self._nav_btn(tools, "🧹  清空缓存", self.clear_all_cache)
+        # 侧栏底部小字（题库规模）
+        self.side_info = tk.Label(tools, text="加载中…", bg=self.SB_BG, fg=self.SB_SUB,
+                                  font=("微软雅黑", 7), anchor="w", padx=14, pady=6)
+        self.side_info.pack(fill="x")
+
+    def _session_title(self, sid):
+        """会话标题：优先用第一条问题摘要"""
+        fp = os.path.join(SAVE_DIR, f"session_{sid}.json")
+        try:
+            if os.path.exists(fp):
+                with open(fp, encoding="utf-8") as f:
+                    hist = json.load(f)
+                if hist and hist[0].get("question"):
+                    q = hist[0]["question"].strip().replace("\n", " ")
+                    return q[:16] + ("…" if len(q) > 16 else "")
+        except Exception:
+            pass
+        return f"会话 {sid[:6]}"
+
+    def _refresh_session_list(self, select_sid=None):
+        """重建左侧会话列表"""
+        for w in self.sess_inner.winfo_children():
+            w.destroy()
+        for cid in self.notebook.tabs():
+            w = self.notebook.nametowidget(cid)
+            sid = getattr(w, "session_id", "")
+            title = self._session_title(sid)
+            active = (sid == self._active_sid)
+            row = tk.Label(self.sess_inner, text=title,
+                           bg=self.SB_ACT if active else self.SB_BG,
+                           fg="white" if active else "#CBD5E1",
+                           font=("微软雅黑", 9), anchor="w", padx=12, pady=6,
+                           cursor="hand2")
+            row.pack(fill="x")
+            row.bind("<Button-1>", lambda e, c=cid: self.select_session(c))
+            row.bind("<Enter>", lambda e, r=row, a=active: r.config(
+                bg=self.SB_ACT if a else self.SB_HOV))
+            row.bind("<Leave>", lambda e, r=row, a=active: r.config(
+                bg=self.SB_ACT if a else self.SB_BG))
+
+    def select_session(self, child):
+        """点击侧栏会话 -> 切换右侧聊天区"""
+        w = self.notebook.nametowidget(child)
+        self._active_sid = getattr(w, "session_id", "")
+        self.notebook.select(child)
+        self._refresh_session_list()
+        self.status.config(text=f"📁 当前会话：{self._session_title(self._active_sid)}",
+                           fg=SUB_TEXT)
+
+    def _hide_all_tabs(self):
+        """隐藏 notebook 标签页头部（会话切换交给侧栏）"""
+        try:
+            for i in range(len(self.notebook.tabs())):
+                self.notebook.tab(i, state="hidden")
+        except Exception:
+            pass
+
+    def clear_all_cache(self):
+        clear_cache()
+        messagebox.showinfo("提示", "问答缓存已清空")
+        self.status.config(text="🧹 问答缓存已清空", fg=SUB_TEXT)
+
     def _load_bank_info(self):
-        """后台统计题库规模并显示在状态栏（只读 CSV，不编码）"""
+        """后台统计题库规模并显示在状态栏与侧栏（只读 CSV，不编码）"""
         try:
             from question_bank import bank_stats
             st = bank_stats()
             self.status.config(
                 text=f"●  混合 RAG 检索 · DeepSeek 生成 · 题库共 {st['file_total']} 题（含考研真题）· 就绪",
-                fg="#E0F2FE")
+                fg=SUB_TEXT)
+            try:
+                self.side_info.config(text=f"题库：{st['file_total']} 题 · 会话：{len(self.notebook.tabs())}")
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -547,19 +659,29 @@ class MedApp:
         for f in files:
             self.session_counter += 1
             session_id = f[len("session_"):-len(".json")]
-            title = f"会话 {self.session_counter}"
-            self.add_tab(session_id, title)
+            self.add_tab(session_id, load_history=False)
 
     def new_session(self):
         self.session_counter += 1
         session_id = str(int(time.time()))
-        title = f"会话 {self.session_counter}"
-        self.add_tab(session_id, title)
+        self.add_tab(session_id)
 
-    def add_tab(self, session_id, title):
-        tab = SessionTab(self.notebook, self.notebook, session_id, title)
-        self.notebook.add(tab, text=title)
+    def add_tab(self, session_id, title=None, load_history=True):
+        tab = SessionTab(self.notebook, self.notebook,
+                         session_id, title or f"会话 {self.session_counter}", app=self)
+        self.notebook.add(tab, text=tab.title)
+        self._hide_all_tabs()
+        self._active_sid = session_id
         self.notebook.select(tab)
+        self._refresh_session_list()
+
+    def refresh_sidebar(self):
+        """会话有新问答后刷新侧栏标题/状态（由 SessionTab 触发）"""
+        try:
+            self._refresh_session_list()
+            self.side_info.config(text=f"会话数：{len(self.notebook.tabs())}")
+        except Exception:
+            pass
 
     def pin_current(self):
         current = self.notebook.select()
@@ -586,7 +708,7 @@ class MedApp:
             except Exception as e:
                 messagebox.showerror("生成失败", f"生成试卷出错：{e}")
             finally:
-                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg="#E0F2FE")
+                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg=SUB_TEXT)
 
         threading.Thread(target=_do, daemon=True).start()
 
@@ -620,7 +742,7 @@ class MedApp:
             except Exception as e:
                 messagebox.showerror("更新失败", str(e))
             finally:
-                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg="#E0F2FE")
+                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg=SUB_TEXT)
                 if current_tab:
                     tab = self.notebook.nametowidget(current_tab)
                     if hasattr(tab, 'status_label'):
@@ -654,7 +776,7 @@ class MedApp:
             except Exception as e:
                 messagebox.showerror("导入异常", str(e))
             finally:
-                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg="#E0F2FE")
+                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg=SUB_TEXT)
 
         threading.Thread(target=_do_import, daemon=True).start()
 
@@ -678,7 +800,7 @@ class MedApp:
             except Exception as e:
                 messagebox.showerror("一键更新异常", str(e))
             finally:
-                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg="#E0F2FE")
+                self.status.config(text="●  混合 RAG 检索 · DeepSeek 生成 · 就绪", fg=SUB_TEXT)
                 if current_tab:
                     tab = self.notebook.nametowidget(current_tab)
                     if hasattr(tab, 'status_label'):

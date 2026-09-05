@@ -98,15 +98,16 @@ def _pool_questions(items, key):
 
 
 def _p(doc, text, size=10.5, bold=False):
-    """楷体段落"""
+    """楷体段落（多行文本按行分段，保证表格/换行内容不丢行）"""
     from docx.shared import Pt
     from docx.oxml.ns import qn
-    p = doc.add_paragraph()
-    run = p.add_run(text)
-    run.font.size = Pt(size)
-    run.font.bold = bold
-    run.font.name = "楷体"
-    run._element.rPr.rFonts.set(qn('w:eastAsia'), '楷体')
+    for part in (text or "").split("\n"):
+        p = doc.add_paragraph()
+        run = p.add_run(part)
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        run.font.name = "楷体"
+        run._element.rPr.rFonts.set(qn('w:eastAsia'), '楷体')
     return p
 
 

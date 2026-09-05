@@ -128,6 +128,11 @@ HTML_PAGE = """<!DOCTYPE html>
   #send:active { transform:scale(.9); }
   #send:disabled { opacity:.45; transform:none; }
   .hint { text-align:center; font-size:10px; color:#94A3B8; padding:2px 0 4px; background:var(--card); }
+  /* ===== 回答内表格（体系性知识） ===== */
+  .bubble table { border-collapse: collapse; margin:6px 0; width:100%; font-size:13px; }
+  .bubble th, .bubble td { border:1px solid #CBD5E1; padding:4px 8px; text-align:left; }
+  .bubble th { background:#F1F5F9; font-weight:600; }
+  .bubble tr:nth-child(even) td { background:#FAFCFF; }
 </style>
 </head>
 <body>
@@ -204,12 +209,50 @@ HTML_PAGE = """<!DOCTYPE html>
     av.textContent = role === 'user' ? '🙂' : '🩺';
     var b = document.createElement('div');
     b.className = 'bubble';
-    b.textContent = text;
+    renderRich(b, text);
     wrap.appendChild(av);
     wrap.appendChild(b);
     list.appendChild(wrap);
     list.scrollTop = list.scrollHeight;
     return b;
+  }
+  /* 轻量渲染：Markdown 管道表格 -> HTML <table>；其余文本安全显示 */
+  function renderRich(b, text){
+    var lines = String(text || '').split('\\n');
+    var buf = [], rows = null;
+    function flushText(){ if(buf.length){ b.appendChild(document.createTextNode(buf.join('\\n'))); buf = []; } }
+    function flushTable(){
+      if(rows && rows.length){
+        var tb = document.createElement('table');
+        rows.forEach(function(r, i){
+          var tr = document.createElement('tr');
+          r.forEach(function(c){
+            var cell = document.createElement(i === 0 ? 'th' : 'td');
+            cell.textContent = c;
+            tr.appendChild(cell);
+          });
+          tb.appendChild(tr);
+        });
+        b.appendChild(tb);
+        rows = null;
+      }
+    }
+    lines.forEach(function(line){
+      var m = line.match(/^\s*\|(.*)\|\s*$/);
+      if(m && m[1].indexOf('|') >= 0){
+        flushText();
+        var cells = m[1].split('|').map(function(s){ return s.trim(); });
+        var isSep = cells.length > 0 && cells.every(function(c){ return /^:?-{2,}:?$/.test(c); });
+        if(isSep){ return; }
+        if(!rows){ rows = []; }
+        rows.push(cells);
+      } else {
+        flushTable();
+        buf.push(line);
+      }
+    });
+    flushTable();
+    flushText();
   }
   function addTyping(){
     var wrap = document.createElement('div');

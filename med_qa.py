@@ -227,6 +227,64 @@ PATHWAY_CONFIG = {
         "nodes": list(GLYCOGEN_POS.keys()), "pos": GLYCOGEN_POS, "edges": GLYCOGEN_EDGES,
         "enzymes": GLYCOGEN_ENZ, "compartment": "胞质", "title": "糖原代谢 (合成与分解)"
     },
+    # ===== 扩展主题：酮体代谢（生化） =====
+    "酮体生成": {
+        "nodes": ["乙酰CoA", "乙酰乙酰CoA", "HMG-CoA", "乙酰乙酸", "β-羟丁酸", "丙酮"],
+        "pos": {"乙酰CoA": (0, 3.4), "乙酰乙酰CoA": (0, 2.1), "HMG-CoA": (0, 0.8),
+                "乙酰乙酸": (0, -0.7), "β-羟丁酸": (-1.8, -2.2), "丙酮": (1.8, -2.2)},
+        "edges": [("乙酰CoA", "乙酰乙酰CoA"), ("乙酰乙酰CoA", "HMG-CoA"),
+                  ("HMG-CoA", "乙酰乙酸"), ("乙酰乙酸", "β-羟丁酸"), ("乙酰乙酸", "丙酮")],
+        "enzymes": ["硫解酶", "HMG-CoA合酶", "HMG-CoA裂解酶", "β-羟丁酸脱氢酶", "非酶促(脱羧)"],
+        "compartment": "肝线粒体", "title": "酮体生成 (Ketogenesis)",
+        "net_product": "肝内 2 乙酰CoA → 乙酰乙酸 / β-羟丁酸 / 丙酮；肝外组织氧化利用，脑在饥饿时主要燃料",
+        "mnemonic": "两乙酰CoA绕 HMG，裂成乙酰乙酸再还原成 β-羟丁酸，脱羧出丙酮(烂苹果味)",
+    },
+    # ===== 扩展主题：内分泌轴（生理） =====
+    "甲状腺激素轴": {
+        "nodes": ["下丘脑", "垂体前叶", "甲状腺", "T3/T4(外周)"],
+        "pos": {"下丘脑": (0, 3.4), "垂体前叶": (0, 1.6), "甲状腺": (0, -0.4), "T3/T4(外周)": (0, -2.4)},
+        "edges": [("下丘脑", "垂体前叶"), ("垂体前叶", "甲状腺"), ("甲状腺", "T3/T4(外周)")],
+        "enzymes": ["TRH", "TSH", "分泌释放"],
+        "compartment": "", "title": "下丘脑-垂体-甲状腺轴 (HPT Axis)",
+        "net_product": "分级调节：TRH → TSH → T3/T4；T3/T4 升高后负反馈抑制 TRH 与 TSH",
+        "mnemonic": "下丘脑促垂体，垂体促甲状腺，T3T4 高了反过来踩刹车",
+        "dash_edges": [("T3/T4(外周)", "垂体前叶"), ("T3/T4(外周)", "下丘脑")],
+    },
+    "HPA轴": {
+        "nodes": ["下丘脑", "垂体前叶", "肾上腺皮质", "皮质醇(糖皮质激素)"],
+        "pos": {"下丘脑": (0, 3.4), "垂体前叶": (0, 1.6), "肾上腺皮质": (0, -0.4), "皮质醇(糖皮质激素)": (0, -2.4)},
+        "edges": [("下丘脑", "垂体前叶"), ("垂体前叶", "肾上腺皮质"), ("肾上腺皮质", "皮质醇(糖皮质激素)")],
+        "enzymes": ["CRH", "ACTH", "合成释放"],
+        "compartment": "", "title": "下丘脑-垂体-肾上腺轴 (HPA Axis)",
+        "net_product": "应激分级调节：CRH → ACTH → 皮质醇；皮质醇负反馈抑制 CRH 与 ACTH（长期糖皮质激素治疗需缓慢撤药）",
+        "mnemonic": "应激从下丘脑点火：CRH→ACTH→皮质醇，高了自我刹车",
+        "dash_edges": [("皮质醇(糖皮质激素)", "垂体前叶"), ("皮质醇(糖皮质激素)", "下丘脑")],
+    },
+    "血糖调节": {
+        "nodes": ["血糖升高", "胰岛B细胞", "胰岛素分泌↑", "血糖回落·靶细胞摄取↑",
+                  "血糖降低", "胰岛A细胞", "胰高血糖素分泌↑", "血糖回升·肝糖原分解"],
+        "pos": {"血糖升高": (0, 3.6), "胰岛B细胞": (0, 2.2), "胰岛素分泌↑": (0, 0.6), "血糖回落·靶细胞摄取↑": (0, -1.4),
+                "血糖降低": (6, 3.6), "胰岛A细胞": (6, 2.2), "胰高血糖素分泌↑": (6, 0.6), "血糖回升·肝糖原分解": (6, -1.4)},
+        "edges": [("血糖升高", "胰岛B细胞"), ("胰岛B细胞", "胰岛素分泌↑"), ("胰岛素分泌↑", "血糖回落·靶细胞摄取↑"),
+                  ("血糖降低", "胰岛A细胞"), ("胰岛A细胞", "胰高血糖素分泌↑"), ("胰高血糖素分泌↑", "血糖回升·肝糖原分解")],
+        "enzymes": ["刺激", "分泌", "降糖", "刺激", "分泌", "升糖"],
+        "compartment": "", "title": "血糖调节 (胰岛素 / 胰高血糖素)",
+        "net_product": "升血糖：胰高血糖素↑(肝糖原分解)、肾上腺素、糖皮质激素；降血糖：胰岛素↑(促摄取/合成)",
+        "mnemonic": "血糖高了靠胰岛素压，低了靠胰高血糖素抬——一个开门一个添柴",
+    },
+    "肾素血管紧张素醛固酮系统": {
+        "nodes": ["肾素↑(肾小球旁器)", "血管紧张素原", "血管紧张素Ⅰ", "血管紧张素Ⅱ", "醛固酮↑·保钠排水", "血管收缩·血压↑"],
+        "pos": {"肾素↑(肾小球旁器)": (0, 3.8), "血管紧张素原": (0, 2.4), "血管紧张素Ⅰ": (0, 1.0),
+                "血管紧张素Ⅱ": (0, -0.4), "醛固酮↑·保钠排水": (-2.2, -2.2), "血管收缩·血压↑": (2.2, -2.2)},
+        "edges": [("肾素↑(肾小球旁器)", "血管紧张素原"), ("血管紧张素原", "血管紧张素Ⅰ"),
+                  ("血管紧张素Ⅰ", "血管紧张素Ⅱ"), ("血管紧张素Ⅱ", "醛固酮↑·保钠排水"),
+                  ("血管紧张素Ⅱ", "血管收缩·血压↑")],
+        "enzymes": ["肾素", "", "ACE(肺)", "", ""],
+        "compartment": "", "title": "肾素-血管紧张素-醛固酮系统 (RAAS)",
+        "net_product": "血压下降/肾灌注↓ → 肾素↑ → AngⅡ ↑ → ①醛固酮保钠排水 ②强缩血管 → 血压回升",
+        "mnemonic": "肾素切原成Ⅰ，ACE 切Ⅰ成Ⅱ，Ⅱ号干两件事：保钠(醛固酮)+缩血管",
+        "dash_edges": [],
+    },
 }
 
 
@@ -324,7 +382,8 @@ for _k, _v in _PATHWAY_META.items():
 
 
 def draw_metabolic_pathway(pathway_name):
-    """绘制代谢途径图（优化版：关键酶高亮 + 能量标注 + 可逆箭头 + 分区）"""
+    """绘制知识通路图（简洁清爽版：白底细边、去图例、只标关键酶、自适应画布）
+    支持代谢通路与内分泌轴（虚线=负反馈/抑制）"""
     if pathway_name not in PATHWAY_CONFIG:
         return None
 
@@ -341,118 +400,99 @@ def draw_metabolic_pathway(pathway_name):
     energy = {k: v.replace("₂", "2").replace("₃", "3").replace("₄", "4")
               for k, v in config.get("energy", {}).items()}
     rev_edges = set(config.get("rev_edges", []))
+    dash_edges = set(config.get("dash_edges", []))  # 虚线=负反馈/抑制
 
     for node in nodes:
         if node not in pos:
             logger.warning(f"节点 {node} 缺少位置定义")
             return None
 
-    fig, ax = plt.subplots(figsize=(12, 9))
     pos_dict = {node: pos[node] for node in nodes}
+    xs = [p[0] for p in pos_dict.values()]
+    ys = [p[1] for p in pos_dict.values()]
+    xspan, yspan = (max(xs) - min(xs)), (max(ys) - min(ys))
+    # 自适应画布（纵向轴图更高，横向路径图更宽）
+    fig_w = min(max(3.2 + xspan * 1.0, 4.5), 10)
+    fig_h = min(max(2.6 + yspan * 0.72, 3.4), 7.5)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    ax.set_facecolor("white")
 
-    # 亚细胞定位背景（分区着色 + 标签）
-    if compartment == "线粒体":
-        ax.set_facecolor(C_MITO)
-        bg_label = "线粒体"
-    elif compartment == "胞质":
-        ax.set_facecolor(C_CYTO)
-        bg_label = "胞质"
-    elif compartment in ("胞质/线粒体", "线粒体/胞质"):
-        ax.set_facecolor("#F3E5F5")
-        bg_label = "胞质 / 线粒体"
-    else:
-        ax.set_facecolor("#FAFAFA")
-        bg_label = ""
-
-    # 边（箭头 + 酶 + 能量）
+    # ===== 边：箭头 / 反馈虚线 =====
     for i, (u, v) in enumerate(edges):
         if u not in pos_dict or v not in pos_dict:
             continue
         x1, y1 = pos_dict[u]
         x2, y2 = pos_dict[v]
-        rev = (u, v) in rev_edges
-        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(
-                        arrowstyle="<->" if rev else "->",
-                        color="#90A4AE" if rev else C_ARROW,
-                        lw=2.0 if rev else 1.6,
-                        connectionstyle="arc3,rad=0.05"))
+        if (u, v) in dash_edges:
+            ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                        arrowprops=dict(arrowstyle="-|>", color="#E53935", lw=1.8,
+                                        linestyle=(0, (3, 2.5)), connectionstyle="arc3,rad=0.12"))
+            # 虚线旁标注"负反馈"
+            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+            ax.text(mx, my + 0.28, "负反馈", fontsize=6.5, color="#C62828",
+                    ha='center', va='bottom', style='italic')
+        else:
+            rev = (u, v) in rev_edges
+            ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                        arrowprops=dict(arrowstyle="<->" if rev else "-|>",
+                                        color="#90A4AE" if rev else "#78909C",
+                                        lw=1.2 if rev else 1.4,
+                                        connectionstyle="arc3,rad=0.05"))
+        # 边标签（关键酶 ★ 红字；普通酶/激素 小灰字，均无框）
         enz = enzymes[i] if i < len(enzymes) else ""
         if enz:
             mx, my = (x1 + x2) / 2, (y1 + y2) / 2
             dx, dy = x2 - x1, y2 - y1
-            length = (dx**2 + dy**2) ** 0.5 or 1
-            off_x, off_y = -dy / length * 0.28, dx / length * 0.28
+            length = (dx * dx + dy * dy) ** 0.5 or 1
+            off_x, off_y = -dy / length * 0.26, dx / length * 0.26
             hot = enz in key_enzymes
-            enz_disp = enz.replace("₂", "2").replace("₃", "3")
-            label = ("★" + enz_disp) if hot else enz_disp
-            ax.text(mx + off_x, my + off_y, label,
-                    fontsize=8, color=C_ENZ_HOT if hot else C_ENZ,
-                    style='italic' if not hot else 'normal',
+            disp = enz.replace("₂", "2").replace("₃", "3")
+            ax.text(mx + off_x, my + off_y,
+                    ("★" + disp) if hot else disp,
+                    fontsize=7.5 if hot else 6.8,
+                    color="#C62828" if hot else "#90A4AE",
+                    style='normal' if hot else 'italic',
                     fontweight='bold' if hot else 'normal',
-                    ha='center', va='center',
-                    bbox=dict(boxstyle='round,pad=0.15', facecolor='#FFF8E1' if hot else 'white',
-                              alpha=0.92, edgecolor='#EF9A9A' if hot else 'none',
-                              linewidth=0.8 if hot else 0))
+                    ha='center', va='center')
         if (u, v) in energy:
             ex, ey = (x1 + x2) / 2, (y1 + y2) / 2
             ax.text(ex - off_x * 0.6, ey - off_y * 0.6, energy[(u, v)],
-                    fontsize=7.5, color=C_ENERGY, ha='center', va='center',
-                    fontweight='bold',
-                    bbox=dict(boxstyle='round,pad=0.1', facecolor='#E0F2F1',
-                              alpha=0.9, edgecolor='none'))
+                    fontsize=7, color="#00897B", ha='center', va='center', fontweight='bold')
 
-    # 节点（代谢物）
+    # ===== 节点 =====
     for node, (x, y) in pos_dict.items():
         box = FancyBboxPatch(
-            (x - 0.48, y - 0.19), 0.96, 0.38,
-            boxstyle="round,pad=0.02,rounding_size=0.09",
-            facecolor=C_NODE, edgecolor=C_EDGE, linewidth=1.8, zorder=3
+            (x - 0.52, y - 0.21), 1.04, 0.42,
+            boxstyle="round,pad=0.015,rounding_size=0.12",
+            facecolor="white", edgecolor="#90A4AE", linewidth=1.2, zorder=3
         )
         ax.add_patch(box)
-        node_disp = node.replace("₂", "2").replace("₃", "3")
-        ax.text(x, y, node_disp, ha='center', va='center',
-                fontsize=10, fontweight='bold', color="#1A237E", zorder=4)
+        disp = node.replace("₂", "2").replace("₃", "3")
+        ax.text(x, y, disp, ha='center', va='center',
+                fontsize=9, color="#37474F", zorder=4)
 
-    # 标题（净产物放图底部，避免与标题重叠/裁剪）
-    ax.set_title(title, fontsize=15, fontweight='bold', color=C_TITLE, pad=14)
-    # 底部信息：净产物 + 记忆口诀
+    # ===== 标题与角落区域标签 =====
+    ax.set_title(title, fontsize=13, fontweight='bold', color="#37474F", pad=12)
+    if compartment:
+        ax.text(0.985, 0.96, f"区域：{compartment}", transform=ax.transAxes,
+                ha='right', va='top', fontsize=8, color="#90A4AE")
+
+    # ===== 底部信息条：净产物 + 记忆口诀 =====
     mnemonic = config.get("mnemonic", "")
     info_y = 0.055 if mnemonic else 0.012
     if net_product:
-        fig.text(0.5, info_y, f"净产物: {net_product}", ha='center', va='bottom',
-                 fontsize=9.5, color="#00695C",
-                 bbox=dict(boxstyle='round,pad=0.25', facecolor='#E0F2F1',
-                           alpha=0.85, edgecolor='#80CBC4'))
+        fig.text(0.5, info_y, net_product, ha='center', va='bottom',
+                 fontsize=9, color="#00796B",
+                 bbox=dict(boxstyle='round,pad=0.22', facecolor='#E0F2F1',
+                           alpha=0.9, edgecolor='none'))
     if mnemonic:
-        fig.text(0.5, 0.012, f"口诀: {mnemonic}", ha='center', va='bottom',
-                 fontsize=9, color="#4A148C",
-                 bbox=dict(boxstyle='round,pad=0.25', facecolor='#F3E5F5',
-                           alpha=0.88, edgecolor='#CE93D8'))
-    if bg_label:
-        ax.text(0.985, 0.97, f"区域: {bg_label}", transform=ax.transAxes,
-                ha='right', va='top', fontsize=9, color="#5D4037",
-                bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
-                          alpha=0.8, edgecolor='#BCAAA4'))
+        fig.text(0.5, 0.012, f"口诀：{mnemonic}", ha='center', va='bottom',
+                 fontsize=8.5, color="#6A1B9A",
+                 bbox=dict(boxstyle='round,pad=0.22', facecolor='#F3E5F5',
+                           alpha=0.9, edgecolor='none'))
 
-    # 图例
-    legend_elements = [
-        mpatches.Patch(facecolor=C_NODE, edgecolor=C_EDGE, label='代谢物'),
-        mpatches.FancyArrowPatch((0, 0), (1, 0), color=C_ARROW, arrowstyle='->',
-                                  mutation_scale=20, label='反应方向'),
-        mpatches.FancyArrowPatch((0, 0), (1, 0), color="#90A4AE", arrowstyle='<->',
-                                  mutation_scale=20, label='可逆反应'),
-        mpatches.Patch(facecolor='white', edgecolor='none', label='普通酶(斜体)'),
-        mpatches.Patch(facecolor='#FFF8E1', edgecolor='#EF9A9A', label='★ 关键/限速酶'),
-        mpatches.Patch(facecolor='#E0F2F1', edgecolor='none', label='能量/产物'),
-    ]
-    ax.legend(handles=legend_elements, loc='lower right', fontsize=8.5,
-              framealpha=0.92, edgecolor='gray')
-
-    ax.set_xlim(min(p[0] for p in pos_dict.values()) - 1.1,
-                max(p[0] for p in pos_dict.values()) + 1.1)
-    ax.set_ylim(min(p[1] for p in pos_dict.values()) - 1.2,
-                max(p[1] for p in pos_dict.values()) + 1.3)
+    ax.set_xlim(min(xs) - 1.0, max(xs) + 1.0)
+    ax.set_ylim(min(ys) - 1.3, max(ys) + 1.4)
     ax.axis('off')
     plt.tight_layout()
 
@@ -466,12 +506,12 @@ def draw_metabolic_pathway(pathway_name):
         plt.clf()
         gc.collect()
 
-    logger.info(f"✅ 生成代谢图: {img_path} ({pathway_name})")
+    logger.info(f"✅ 生成知识图: {img_path} ({pathway_name})")
     return img_path
 
 
 def get_image_tag(question):
-    """检测问题中的代谢途径关键词"""
+    """检测问题中的知识点关键词，匹配到则生成对应知识图（代谢通路/内分泌轴等）"""
     keyword_map = {
         "三羧酸循环": ["三羧酸循环", "TCA循环", "TCA", "柠檬酸循环", "Krebs循环"],
         "糖酵解": ["糖酵解", "糖解", "EMP途径"],
@@ -481,13 +521,302 @@ def get_image_tag(question):
         "磷酸戊糖途径": ["磷酸戊糖", "PPP", "戊糖磷酸", "NADPH合成"],
         "胆固醇合成": ["胆固醇合成", "胆固醇代谢", "甲羟戊酸途径", "HMG-CoA还原酶"],
         "糖原": ["糖原合成", "糖原分解", "糖原代谢", "糖原贮积"],
+        "酮体生成": ["酮体", "酮体生成", "乙酰乙酸", "β-羟丁酸", "丙酮", "酮症"],
+        "甲状腺激素轴": ["甲状腺激素的调节", "甲状腺轴", "TRH", "TSH", "下丘脑垂体甲状腺",
+                         "甲状腺激素分泌的调节", "甲亢的调节"],
+        "HPA轴": ["下丘脑垂体肾上腺", "HPA轴", "CRH", "ACTH", "皮质醇的调节",
+                  "糖皮质激素的调节", "库欣"],
+        "血糖调节": ["血糖调节", "血糖的调节", "胰岛素和胰高血糖素", "胰岛素与胰高血糖素",
+                    "血糖升高", "血糖降低"],
+        "肾素血管紧张素醛固酮系统": ["肾素血管紧张素", "RAAS", "醛固酮的调节",
+                                 "血管紧张素原", "肾素-血管紧张素"],
     }
     for pathway, keywords in keyword_map.items():
         if any(kw in question for kw in keywords):
             img_path = draw_metabolic_pathway(pathway)
             if img_path:
                 return f"[IMAGE:{img_path}]"
+    # 外科手术切除范围图
+    for topic, keywords in SURGERY_KEYWORDS.items():
+        if any(kw in question for kw in keywords):
+            img_path = draw_surgery_diagram(topic)
+            if img_path:
+                return f"[IMAGE:{img_path}]"
     return ""
+
+
+# ==================== 外科手术切除范围示意图 ====================
+# 风格：白底、灰线器官轮廓、红=切除、蓝=淋巴结清扫、绿字=保留要点
+_C_ORG = "#90A4AE"        # 器官轮廓
+_C_KEEP = "#ECEFF1"       # 保留区域底色
+_C_RES = "#E53935"        # 切除（红）
+_C_RES_F = "#FFCDD2"      # 切除区浅红
+_C_LN = "#1E88E5"         # 淋巴结（蓝）
+_C_TEXT = "#37474F"
+
+SURGERY_KEYWORDS = {
+    "胃癌D2根治术": ["胃癌根治", "胃癌手术", "D2根治", "D2清扫", "胃癌切除范围", "胃癌术式"],
+    "乳腺癌改良根治术": ["乳腺癌根治", "改良根治", "乳腺癌手术", "乳腺癌切除范围", "腋窝淋巴结清扫"],
+    "甲状腺癌手术": ["甲状腺癌", "甲状腺癌手术", "甲状腺癌根治", "甲状腺切除范围", "甲状腺全切",
+                   "腺叶切除", "颈淋巴结清扫", "甲状腺癌清扫"],
+    "结肠癌根治术": ["结肠癌根治", "结肠癌手术", "结肠癌切除范围", "右半结肠", "左半结肠",
+                   "结肠癌清扫", "结肠癌术式"],
+    "直肠癌TME": ["直肠癌根治", "直肠癌手术", "TME", "全直肠系膜", "直肠癌切除范围", "直肠癌保肛"],
+    "肺癌肺叶切除": ["肺癌手术", "肺叶切除", "肺癌根治", "肺癌切除范围", "支气管袖状",
+                   "肺段切除", "肺癌淋巴结清扫"],
+    "肝癌规则性切除": ["肝癌手术", "肝癌切除", "规则性切除", "解剖性切除", "肝叶切除",
+                     "肝癌根治", "肝段切除", "Pringle"],
+    "胰十二指肠切除术": ["胰十二指肠切除", "Whipple", "胰头癌手术", "胰头切除", "胰头癌根治"],
+}
+
+
+def _surgery_finish(fig, ax, title, note, mnemonic, img_name):
+    """外科图统一收尾：标题、底部要点/口诀、保存"""
+    ax.set_title(title, fontsize=13, fontweight='bold', color=_C_TEXT, pad=12)
+    if note:
+        fig.text(0.5, 0.06, note, ha='center', va='bottom', fontsize=9, color="#00695C",
+                 bbox=dict(boxstyle='round,pad=0.22', facecolor='#E0F2F1', alpha=0.9, edgecolor='none'))
+    if mnemonic:
+        fig.text(0.5, 0.012, f"口诀：{mnemonic}", ha='center', va='bottom', fontsize=8.5,
+                 color="#6A1B9A", bbox=dict(boxstyle='round,pad=0.22', facecolor='#F3E5F5',
+                                            alpha=0.9, edgecolor='none'))
+    ax.set_xlim(-6, 6)
+    ax.set_ylim(-3.2, 4.2)
+    ax.axis('off')
+    img_path = os.path.join(TEMP_IMAGE_DIR, f"{img_name}.png")
+    try:
+        fig.savefig(img_path, bbox_inches='tight', dpi=200, facecolor='white')
+    finally:
+        plt.close(fig)
+        plt.clf()
+        gc.collect()
+    logger.info(f"✅ 生成外科图: {img_path} ({title})")
+    return img_path
+
+
+def _organ_ellipse(ax, cx, cy, w, h, label="", color=_C_ORG, fc=_C_KEEP):
+    """灰描边椭圆器官"""
+    from matplotlib.patches import Ellipse
+    e = Ellipse((cx, cy), w, h, facecolor=fc, edgecolor=color, linewidth=1.6, zorder=2)
+    ax.add_patch(e)
+    if label:
+        ax.text(cx, cy, label, ha='center', va='center', fontsize=9,
+                color=_C_TEXT, zorder=4)
+
+
+def _resect_ellipse(ax, cx, cy, w, h, label="", lw=2.0):
+    """红色切除高亮椭圆"""
+    from matplotlib.patches import Ellipse
+    e = Ellipse((cx, cy), w, h, facecolor=_C_RES_F, edgecolor=_C_RES,
+                linewidth=lw, linestyle='-', zorder=3, alpha=0.85)
+    ax.add_patch(e)
+    if label:
+        ax.text(cx, cy, label, ha='center', va='center', fontsize=9,
+                color="#B71C1C", fontweight='bold', zorder=5)
+
+
+def _ln_group(ax, cx, cy, r, label, cleared=True, dx=0):
+    """淋巴结组（蓝圈；cleared=True 红×表示清扫）"""
+    from matplotlib.patches import Circle
+    c = Circle((cx, cy), r, facecolor='none', edgecolor=_C_LN if cleared else "#B0BEC5",
+               linewidth=1.6, zorder=3)
+    ax.add_patch(c)
+    if cleared:
+        ax.text(cx, cy, "×", ha='center', va='center', fontsize=11,
+                color=_C_RES, fontweight='bold', zorder=4)
+    ax.text(cx + r + dx, cy, label, ha='left' if dx >= 0 else 'right', va='center',
+            fontsize=7.5, color=_C_TEXT, zorder=4)
+
+
+def _text_note(ax, x, y, s, color="#455A64", size=8.5, bold=False, ha='left'):
+    ax.text(x, y, s, fontsize=size, color=color, ha=ha, va='center',
+            fontweight='bold' if bold else 'normal')
+
+
+def _bar(ax, x, y, w, h, label="", color=_C_ORG, fc=_C_KEEP, lw=1.6, tsize=8):
+    """条状/矩形器官（肠道、血管等）"""
+    b = mpatches.FancyBboxPatch((x - w / 2, y - h / 2), w, h,
+                                boxstyle="round,pad=0.02,rounding_size=0.06",
+                                facecolor=fc, edgecolor=color, linewidth=lw, zorder=2)
+    ax.add_patch(b)
+    if label:
+        ax.text(x, y, label, ha='center', va='center', fontsize=tsize, color=_C_TEXT, zorder=4)
+
+
+def _resect_bar(ax, x, y, w, h, label="", tsize=8.5):
+    """红色条状切除高亮"""
+    b = mpatches.FancyBboxPatch((x - w / 2, y - h / 2), w, h,
+                                boxstyle="round,pad=0.02,rounding_size=0.06",
+                                facecolor=_C_RES_F, edgecolor=_C_RES, linewidth=2.0, zorder=3)
+    ax.add_patch(b)
+    if label:
+        ax.text(x, y, label, ha='center', va='center', fontsize=tsize,
+                color="#B71C1C", fontweight='bold', zorder=5)
+
+
+def draw_surgery_diagram(topic):
+    """外科手术切除范围示意图（胃癌/乳腺癌/甲状腺癌）"""
+    if topic == "胃癌D2根治术":
+        fig, ax = plt.subplots(figsize=(7.5, 6.2))
+        # 保留器官：近端胃、十二指肠、肝/脾背景
+        _organ_ellipse(ax, -1.2, 1.0, 3.6, 2.6, "近端胃(保留)")
+        _organ_ellipse(ax, 3.2, 0.2, 1.8, 1.2, "十二指肠\n残端吻合")
+        _organ_ellipse(ax, -3.6, 2.6, 2.2, 1.4, "脾(保留)")
+        _organ_ellipse(ax, 3.4, 2.8, 2.4, 1.5, "肝(保留)")
+        # 切除：远端胃 2/3（红色覆盖右侧大半胃）
+        _resect_ellipse(ax, 0.5, 0.6, 3.4, 2.0, "切除远端胃 2/3\n+ 大、小网膜")
+        # 淋巴结 D1 / D2 两组
+        _ln_group(ax, -2.1, -0.9, 0.85, "D1：贲门周/胃小弯\n幽门上/大弯(①②③④)")
+        _ln_group(ax, 1.6, -1.6, 0.95, "D2：肝总/脾门/腹腔干\n胃左动脉旁(⑤⑥⑦⑧⑨⑩⑪)")
+        _text_note(ax, -5.8, 3.6, "红=切除区域", color=_C_RES, bold=True)
+        _text_note(ax, -5.8, 3.1, "蓝×=淋巴结清扫", color=_C_LN)
+        p = _surgery_finish(fig, ax, "胃癌根治术（D2 式）切除范围",
+                            "切除：远端胃 2/3 + 大小网膜 + 区域淋巴结(D1+D2)；残胃与十二指肠(或空肠)吻合",
+                            "切胃三分二，网膜一起端；D1 胃周 D2 沿血管，一站一站全清完",
+                            "胃癌D2根治术")
+
+    elif topic == "乳腺癌改良根治术":
+        fig, ax = plt.subplots(figsize=(7.5, 6.2))
+        # 胸壁/胸大肌（保留）
+        _organ_ellipse(ax, -1.6, -0.4, 5.4, 3.4, "胸大肌(保留·改良根治不切除)")
+        # 乳房（切除）
+        _resect_ellipse(ax, 1.7, 1.4, 3.0, 2.2, "乳腺(全切)\n+ 胸大肌筋膜")
+        # 腋窝淋巴结三站
+        _ln_group(ax, -1.2, 2.6, 0.8, "Ⅰ站(胸小肌外侧)\n清扫", dx=0.15)
+        _ln_group(ax, 0.8, 3.3, 0.8, "Ⅱ站(胸小肌深面)\n清扫", dx=0.15)
+        _ln_group(ax, 2.9, 3.6, 0.8, "Ⅲ站(锁骨下)\n转移才清扫", cleared=False, dx=0.15)
+        _text_note(ax, -5.8, 3.6, "红=切除  ·  蓝×=清扫  ·  灰圈=视情况", color=_C_TEXT)
+        p = _surgery_finish(fig, ax, "乳腺癌改良根治术 切除范围",
+                            "切除：全乳腺 + 胸大肌筋膜 + 腋窝淋巴结(Ⅰ+Ⅱ站)；保留胸大肌(与根治术区别)；Ⅲ站转移才清",
+                            "乳全切、肌保留，腋窝一二站扫干净；三站有了才动手",
+                            "乳腺癌改良根治术")
+
+    elif topic == "甲状腺癌手术":
+        fig, ax = plt.subplots(figsize=(7.5, 6.2))
+        # 喉/气管中线
+        _organ_ellipse(ax, 0, 0.2, 1.6, 4.6, "喉/气管")
+        # 甲状腺两叶+峡部
+        _organ_ellipse(ax, -1.7, 1.4, 1.9, 2.6, "左叶")
+        _organ_ellipse(ax, 1.7, 1.4, 1.9, 2.6, "右叶")
+        ax.add_patch(mpatches.FancyBboxPatch((-0.7, 1.0), 1.4, 0.9,
+                     boxstyle="round,pad=0.02", facecolor=_C_KEEP,
+                     edgecolor=_C_ORG, linewidth=1.6, zorder=2))
+        ax.text(0, 1.45, "峡部", ha='center', va='center', fontsize=8, color=_C_TEXT)
+        # 切除：右叶+峡部（腺叶切除示意）+ 中央区清扫
+        _resect_ellipse(ax, 1.7, 1.4, 1.85, 2.45, "癌侧腺叶\n切除")
+        _ln_group(ax, 0.55, -0.9, 0.8, "中央组(Ⅵ区)\n气管食管沟·清扫", dx=0.1)
+        _ln_group(ax, -1.7, -2.1, 0.9, "颈侧组(Ⅱ~Ⅴ)\n转移才清扫", cleared=False, dx=0.1)
+        _text_note(ax, -5.8, 3.6, "红=切除  ·  蓝×=清扫  ·  灰圈=视情况", color=_C_TEXT)
+        _text_note(ax, -5.8, 3.1, "对侧叶(左叶)保留(腺叶切除式)", color="#455A64", size=8)
+        p = _surgery_finish(fig, ax, "甲状腺癌手术 切除范围",
+                            "腺叶切除：癌侧腺叶+峡部+中央区(Ⅵ)清扫；全切：双叶+峡部；颈侧组转移才加清扫",
+                            "一侧叶加峡部是底线，中央区淋巴顺手端；双侧多灶才全切",
+                            "甲状腺癌手术")
+
+    elif topic == "结肠癌根治术":
+        fig, ax = plt.subplots(figsize=(7.8, 6.2))
+        # 横结肠（顶横条，右1/3 红）
+        _bar(ax, 0, 2.6, 8.6, 1.1, "横结肠", tsize=8)
+        _resect_bar(ax, 2.9, 2.6, 2.9, 1.05, "横结肠右1/3", tsize=7)
+        # 右侧：升结肠+盲肠+回肠末端（红）
+        _resect_bar(ax, 3.6, 0.4, 2.4, 3.4, "升结肠+盲肠\n回肠末端15cm", tsize=8)
+        # 左侧：降结肠+乙状（保留灰）
+        _bar(ax, -3.6, 0.4, 2.2, 4.6, "降结肠+乙状结肠\n(左半切除时切)", tsize=7.5)
+        # 血管标注（血供决定切除）
+        _text_note(ax, 0, 3.55, "中结肠动脉（左/右支分界）", color=_C_RES, size=8, bold=True)
+        _ln_group(ax, 3.6, 3.6, 0.62, "回结肠/右结肠/\n中结肠右支淋巴结", dx=-0.05)
+        _text_note(ax, 0.3, -1.2, "右半结肠切除术：回盲+升结肠+横结肠右1/3，结扎回结肠/右结肠/中结肠右支血管",
+                   color="#00695C", size=8.5)
+        _text_note(ax, -5.9, 3.7, "红=切除(右半式)", color=_C_RES, bold=True)
+        p = _surgery_finish(fig, ax, "结肠癌根治术（按血供决定范围）",
+                            "右半：回肠末15cm+盲肠升结肠+横右1/3(供血：回结肠/右结肠/中结肠右支)；左半：横左1/3+降+乙状",
+                            "切肠跟着血管走：右半看回结右中右，左半看左结乙状动脉",
+                            "结肠癌根治术")
+
+    elif topic == "直肠癌TME":
+        fig, ax = plt.subplots(figsize=(7.2, 6.4))
+        # 腹主动脉 / IMA
+        _bar(ax, 0, 3.3, 0.9, 1.2, "腹主动脉", tsize=7.5)
+        _bar(ax, 0, 1.9, 0.7, 1.2, "IMA", tsize=7.5)
+        _ln_group(ax, 1.1, 1.9, 0.62, "肠系膜下动脉\n根部淋巴结(高位结扎)", dx=0.05)
+        # 直肠 + 全直肠系膜（整块红）
+        _resect_bar(ax, 0.1, -0.6, 2.9, 3.4, "直肠 + 全直肠系膜\n(TME 整块切除)", tsize=8)
+        # 骶前筋膜保留线
+        _text_note(ax, 2.6, -0.4, "骶前筋膜(保留)\n避免损伤盆丛", color="#455A64", size=7.5)
+        # 肛管/括约肌（保肛判断）
+        _bar(ax, 0.1, -2.8, 1.5, 1.0, "肛管/括约肌", tsize=7.5)
+        _text_note(ax, 0.1, -3.6, "肿瘤距肛缘 >5cm 可保肛；≤5cm 常不保肛(APR)",
+                   color="#00695C", size=8.5)
+        _ln_group(ax, -1.9, -0.6, 0.66, "侧方淋巴结\n(必要时清扫)", cleared=False, dx=-0.05)
+        p = _surgery_finish(fig, ax, "直肠癌根治术 TME",
+                            "TME：直肠+全直肠系膜(含血管淋巴脂肪整块)切除；下切缘距肿瘤≥2cm；保肛看距肛缘距离",
+                            "系膜整块端，下切两公分；五厘米上能保肛，再低就走 APR",
+                            "直肠癌TME")
+
+    elif topic == "肺癌肺叶切除":
+        fig, ax = plt.subplots(figsize=(7.8, 6.4))
+        # 气管+隆突
+        _bar(ax, 0, 3.7, 0.8, 1.5, "气管", tsize=7.5)
+        # 右肺三叶（上叶红=示意切除）
+        _resect_ellipse(ax, 3.0, 1.8, 2.1, 1.6, "右肺上叶\n(癌灶·切除)", lw=2.0)
+        _organ_ellipse(ax, 3.2, -0.4, 2.2, 1.9, "右肺中叶", fc="#F5F5F5")
+        _organ_ellipse(ax, 3.1, -2.2, 2.3, 1.5, "右肺下叶")
+        # 左肺两叶（保留）
+        _organ_ellipse(ax, -3.0, 0.8, 2.3, 2.6, "左肺\n(上叶+下叶)")
+        # 支气管残端
+        _text_note(ax, 0.2, 2.3, "主支气管/叶支气管切缘", color="#455A64", size=7.5)
+        # 淋巴结
+        _ln_group(ax, -1.1, 1.0, 0.7, "N1 肺门/叶间\n(10-11组)清扫", dx=0.05)
+        _ln_group(ax, -0.8, -1.4, 0.75, "N2 同侧纵隔\n(2R/4R/7组)", dx=0.05)
+        _text_note(ax, -5.8, 3.7, "红=切除(以右肺上叶为例)", color=_C_RES, bold=True)
+        _text_note(ax, -5.8, 3.2, "其余肺叶保留", color="#455A64", size=8)
+        p = _surgery_finish(fig, ax, "肺癌手术（肺叶切除+淋巴结清扫）",
+                            "肺叶切除术：患叶+相应支气管血管整块切除，系统性纵隔淋巴结清扫(N1+同侧N2)；中央型可用袖状切除保肺",
+                            "切叶要整块，肺门纵隔一扫清；中央型怕切多，袖状成形来保肺",
+                            "肺癌肺叶切除")
+
+    elif topic == "肝癌规则性切除":
+        fig, ax = plt.subplots(figsize=(7.2, 6.4))
+        # 肝脏轮廓（大椭圆）分左右半肝
+        _organ_ellipse(ax, 0, 0.6, 8.0, 4.2, "", fc="#FAFAFA")
+        # 右半肝红 / 左半肝灰
+        _resect_ellipse(ax, 2.6, 0.8, 3.5, 3.2, "右半肝\n(规则性切除)", lw=2.0)
+        _organ_ellipse(ax, -2.6, 0.8, 3.2, 3.0, "左半肝\n(保留)")
+        # 分界血管：肝中静脉
+        _bar(ax, -0.4, 0.8, 0.18, 3.6, "", color="#1E88E5")
+        ax.text(-0.4, 2.7, "肝中静脉\n(分段分界)", fontsize=7, color="#1E88E5", ha='center')
+        # 胆囊/下腔静脉标记
+        _organ_ellipse(ax, 3.9, -1.6, 1.0, 0.9, "胆囊", fc="#FAFAFA")
+        _text_note(ax, 2.6, 2.9, "下腔静脉/肝静脉汇入", color="#455A64", size=7.5)
+        _ln_group(ax, 0.6, -2.0, 0.6, "肝门淋巴结\n(必要时)", cleared=False)
+        _text_note(ax, -5.9, 3.6, "红=切除", color=_C_RES, bold=True)
+        p = _surgery_finish(fig, ax, "肝癌规则性（解剖性）切除",
+                            "按 Couinaud 肝段/肝叶解剖分界切除（以右半肝切除示意），可加 Pringle 间歇阻断肝门血流；保留侧肝需有足够代偿功能",
+                            "切肝找段界，中静脉是分水岭；门脉阻断十分钟，留肝得够用",
+                            "肝癌规则性切除")
+
+    elif topic == "胰十二指肠切除术":
+        fig, ax = plt.subplots(figsize=(7.6, 6.2))
+        # 胃（远端红）
+        _resect_ellipse(ax, -3.0, 2.6, 2.8, 1.9, "远端胃\n(幽门侧)", lw=2.0)
+        # 十二指肠 C 环 + 胰头（整块红）
+        _resect_bar(ax, 0.3, 0.8, 3.6, 3.4, "十二指肠(C环)\n+ 胰头\n整块切除", tsize=8.5)
+        # 胆囊+胆总管（红）
+        _resect_bar(ax, 2.9, 3.4, 1.6, 1.2, "胆囊+胆总管", tsize=7.5)
+        # 空肠起始（切）+ 残端
+        _resect_bar(ax, -0.9, -1.5, 2.0, 0.8, "空肠起始段", tsize=7.5)
+        _bar(ax, -3.2, 1.2, 1.2, 2.2, "胰体尾\n(保留)")
+        # 重建三吻合
+        _text_note(ax, 3.4, -1.6, "重建：①胰肠吻合 ②胆肠吻合 ③胃肠吻合", color="#00695C", size=9, bold=True)
+        _text_note(ax, -5.9, 3.6, "红=切除", color=_C_RES, bold=True)
+        p = _surgery_finish(fig, ax, "胰十二指肠切除术（Whipple）",
+                            "切除：胰头+十二指肠全部+远端胃+胆囊+胆总管+近端空肠；重建：胰肠/胆肠/胃肠三吻合；胰头癌唯一根治术式",
+                            "胰头十二指肠一家端，胃胆空肠一锅端；重建三吻合，胰肠排第一",
+                            "胰十二指肠切除术")
+
+    else:
+        return None
+    return p
 
 # ==================== 历史管理 ====================
 def load_history():
@@ -865,7 +1194,8 @@ def _parse_fills(answer):
     for i in range(1, len(blocks) - 1, 2):
         lvl = blocks[i]
         body = blocks[i + 1]
-        m = re.search(r"参考答案[:：]\s*(.*)", body, re.S)
+        # 参考答案仅取独立一行（表格/多行题干不受影响）
+        m = re.search(r"参考答案[:：]\s*([^\n]*)", body)
         q_text = body[: m.start()].strip() if m else body.strip()
         a_text = m.group(1).strip() if m else ""
         fills.setdefault(lvl, []).append(q_text)
@@ -962,13 +1292,15 @@ def _render_review_docx(items):
         return
 
     def _p(doc, text, size=7.5, bold=False):
-        """添加楷体段落（中文字体需同时设置 eastAsia）"""
-        p = doc.add_paragraph()
-        run = p.add_run(text)
-        run.font.size = Pt(size)
-        run.font.bold = bold
-        run.font.name = "楷体"
-        run._element.rPr.rFonts.set(qn('w:eastAsia'), '楷体')
+        """添加楷体段落（多行文本按行分段，保证表格/换行内容不丢行）"""
+        parts = (text or "").split("\n")
+        for pi, part in enumerate(parts):
+            p = doc.add_paragraph()
+            run = p.add_run(part)
+            run.font.size = Pt(size)
+            run.font.bold = bold
+            run.font.name = "楷体"
+            run._element.rPr.rFonts.set(qn('w:eastAsia'), '楷体')
         return p
 
     doc = Document()
