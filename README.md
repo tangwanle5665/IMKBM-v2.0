@@ -17,7 +17,8 @@
 2. 改变了界面的绘制
 3. 降低了运行过程中需要的内存，减少了对于电脑硬件配置的要求（嵌入改用 fastembed ONNX 推理，不加载 PyTorch；向量索引使用 SQ8 量化）
 4. 输出了大量bat文件，用户再也不用去一个个运行代码了
-5. v2版本为了提升稳定和速度被收敛删掉了之前更彻底的模块化版本（agent / reranker / retrievers / rewriter / tools / validator 六个独立模块，ReAct 多步推理架构）
+5. v2版本为了提升稳定性和速度被收敛删掉了之前更彻底的模块化版本（agent / reranker / retrievers / rewriter / tools / validator 六个独立模块，ReAct 多步推理架构）
+6. 问题回复支持输出表格
 
 ---
 
